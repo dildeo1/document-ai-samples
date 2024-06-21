@@ -30,7 +30,7 @@ EXPOSE 8080
 USER appuser
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl --fail http://localhost:$PORT/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl --fail http://localhost:8080/ || exit 1
 
 # Run the web service on container startup
-CMD exec gunicorn --bind "0.0.0.0:${PORT}" --workers 1 --threads 8 --timeout 0 main:app
+CMD exec gunicorn --bind "0.0.0.0:8080" --workers 1 --threads 8 --timeout 0 main:app
