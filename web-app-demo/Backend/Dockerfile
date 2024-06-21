@@ -4,18 +4,27 @@ FROM python:3.11-slim
 
 # Create a non-root user to run the application
 RUN adduser --system --group --disabled-password appuser
-USER appuser
 
 # Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
 
-# Copy local code to the container image.
+# Set environment variable for the application home directory
 ENV APP_HOME /app
+
+# Set the working directory
 WORKDIR $APP_HOME
+
+# Copy local code to the container image
 COPY . ./
 
-# Install production dependencies.
-RUN pip install --no-cache-dir -r requirements.txt
+# Update pip as the root user
+RUN pip install --upgrade pip
+
+# Install production dependencies as the root user
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Switch to the non-root user
+USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl --fail http://localhost:$PORT/ || exit 1
