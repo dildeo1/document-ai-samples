@@ -1,5 +1,4 @@
-# Use the official lightweight Python image.
-# https://hub.docker.com/_/python
+# Use the official lightweight Python image
 FROM python:3.11-slim
 
 # Create a non-root user to run the application
@@ -17,25 +16,21 @@ WORKDIR $APP_HOME
 # Copy local code to the container image
 COPY . ./
 
-# Update pip as the root user
+# Update pip and install dependencies
 RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install production dependencies as the root user
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Ensure Gunicorn is installed
+RUN pip install gunicorn
 
-# Expose the port
+# Expose the port the app runs on
 EXPOSE 8080
 
 # Switch to the non-root user
 USER appuser
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl --fail http://localhost:8080/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl --fail http://localhost:$PORT/ || exit 1
 
-# Run the web service on container startup. Here we use the gunicorn
-# webserver, with one worker process and 8 threads.
-# For environments with multiple CPU cores, increase the number of workers
-# to be equal to the cores available.
-# Timeout is set to 0 to disable the timeouts of the workers to allow Cloud Run to handle instance scaling.
-
-CMD ["gunicorn", "--bind", ":$PORT", "--workers", "1", "--threads", "8", "--timeout", "0", "main:app"]
+# Run the web service on container startup
+CMD exec gunicorn --bind "0.0.0.0:${PORT}" --workers 1 --threads 8 --timeout 0 main:app
